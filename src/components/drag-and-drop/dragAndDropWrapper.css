@@ -1,0 +1,49 @@
+.droppable {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  min-height: 20px;
+  padding: 0px;
+  width: 100%;
+}
+
+.activeDragOver {
+  background-color: #f5f6ff;
+  opacity: 0.5;
+  height: 48px;
+}
+
+.activeDragOverWithBlock {
+  background-color: #f5f6ff;
+  opacity: 0.5;
+}
+.activeDragWithBlockOneBlock {
+  height: 48px;
+}
+
+.block {
+  background: #d6d8e6;
+  border-radius: 5px;
+  padding: 10px;
+  text-align: center;
+  cursor: grab;
+  box-shadow: inset 5px 0 0 0 white, inset -5px 0 0 0 white;
+}
+
+.blockPlaceholder {
+}
+
+.handleRemoveSelectedElement {
+  position: relative;
+  padding: 0;
+  overflow: hidden;
+  opacity: 0;
+  width: 0px;
+}
+
+.makeBlockVisible {
+  display: block !important;
+  padding: 10px !important;
+  opacity: 1 !important;
+  box-shadow: inset 5px 0 0 0 white, inset -5px 0 0 0 white !important;
+}
