@@ -8,6 +8,7 @@ import DragAndDropWrapper from './drag-and-drop/DragAndDropWrapper'
 import Droppable from './drag-and-drop/Droppable'
 import Draggable from './drag-and-drop/Draggable'
 import { groupCardRowWise, reArrangeAfterDrop } from './drag-and-drop/constant'
+import { runInAction } from 'mobx'
 
 const Page = observer(props => {
   const { clientXRef } = props;
@@ -100,38 +101,44 @@ const Page = observer(props => {
         await store.updatePage({ title })
     }
 
-    const handleDropBlock = (e, draggedInfo) => {
+    const handleDropBlock = async(e, draggedInfo) => {
       e.preventDefault();
       e.target.style = null;
-      const { draggedItem, draggedOverRow, placeholderIndex } = draggedInfo;
+
+      const { draggedItem, draggedOverRow, placeholderIndex, setDraggedOverRow, setDraggedItem  } = draggedInfo;
       if (Object.keys(draggedItem).length === 0) {
         return;
       }
       const targetIndex = placeholderIndex === -1 ? 0 : placeholderIndex;
-      const updatedParents = [...blocks].flat();
-      const selectedBlock = updatedParents.findIndex(
-        (i) => i.id === draggedItem.item.id
-      );
-      const dropOnRow = +(draggedOverRow - 1) / 2;
-      const isDropOnSameRow = draggedItem.item.row === dropOnRow;
-      const draggedRowBlock = updatedParents.filter(
-        (i) => Number.isInteger(dropOnRow) && i.row === dropOnRow
-      );
-  
-      updatedParents[selectedBlock].row = Math.round(dropOnRow);
-      updatedParents[selectedBlock].col =
-        targetIndex > draggedRowBlock.length
-          ? draggedRowBlock.length
-          : +targetIndex;
-  
-      const reArrangedBlock = reArrangeAfterDrop(
-        updatedParents,
-        selectedBlock,
-        dropOnRow,
-        draggedItem,
-        draggedItem.index < placeholderIndex && isDropOnSameRow
-      );
-      setBlock(reArrangedBlock);
+      runInAction(async () => {
+        const updatedParents = blocks;
+        const selectedBlock = updatedParents.findIndex(
+          (i) => i.id === draggedItem.item.id
+        );
+        const dropOnRow = +(draggedOverRow - 1) / 2;
+        const isDropOnSameRow = draggedItem.item.row === dropOnRow;
+        const draggedRowBlock = updatedParents.filter(
+          (i) => Number.isInteger(dropOnRow) && i.row === dropOnRow
+        );
+    
+        updatedParents[selectedBlock].row = Math.round(dropOnRow);
+        updatedParents[selectedBlock].col =
+          targetIndex > draggedRowBlock.length
+            ? draggedRowBlock.length
+            : +targetIndex;
+    
+        const reArrangedBlock = reArrangeAfterDrop(
+          updatedParents,
+          selectedBlock,
+          dropOnRow,
+          draggedItem,
+          draggedItem.index < placeholderIndex && isDropOnSameRow
+        );
+        await store.dragBlockToNewPlace(reArrangedBlock);
+        setBlock(reArrangedBlock);
+      })
+      setDraggedOverRow("");
+      setDraggedItem({});
     };
 
     const addPlaceholderHelper = (blocks, draggedInfo) => {
@@ -157,9 +164,10 @@ const Page = observer(props => {
     const getColumnBlock = (rowDragOverActive, block, draggedInfo) =>
     rowDragOverActive ? addPlaceholderHelper(block, draggedInfo) : block;
 
-    const draggableBlock = blocks.slice(0,-1)
+    const draggableBlock = blocks.slice(0,-1);
     const groupedCards = groupCardRowWise(draggableBlock);
     const cardRowKeys = Object.keys(groupedCards);
+    const [addBlock] = blocks.slice(-1)
 
     const draggableBlocks = (draggedInfo, row) => {
       return getColumnBlock(
@@ -196,18 +204,16 @@ const Page = observer(props => {
         </Droppable>
         ))}
       </DragAndDropWrapper>
-    </div>
 
-    return <div className='page'>
-        {getSortedBlockArray().map((cols, rowIndex) =>
-        <div className='pagerow' key={'row_' + rowIndex} id={'row_' + rowIndex}>
-            {cols?.map(block =>
-                <Block key={block.id}
-                    onHandleMenuAction={onHandleMenuAction}
-                    blockId={block.id}
-                    store={store}
-                    onReturnKeyPressed={async _ => await onReturnKeyPressed(block)} />)}
-        </div>)}
+    {/* This is block is render out of  DragAndDropWrapper as it is a last block which is for adding new block and is not draggable as well*/}
+      {addBlock && 
+        <Block
+          onHandleMenuAction={onHandleMenuAction}
+          blockId={addBlock.id}
+          store={store}
+          onReturnKeyPressed={async _ => await onReturnKeyPressed(addBlock)} 
+        />
+      }
     </div>
 })
 

@@ -88,10 +88,9 @@ const Droppable = (props) => {
   return (
     <div
       onDragOver={(e) => handleDragOverParent(e, rowId)}
-      onDrop={(e) => {
-        handleDrop(e, { draggedItem, draggedOverRow, placeholderIndex }, rowId);
-        setDraggedOverRow("");
-        setDraggedItem({});
+      onDrop={async(e) => {
+        await handleDrop(e, { draggedItem, draggedOverRow, placeholderIndex, setDraggedOverRow, setDraggedItem }, rowId);
+        
       }}
       onDropCapture={handleDropEndCapture}
       ref={droppableRef}
