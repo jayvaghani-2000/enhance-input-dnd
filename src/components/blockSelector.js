@@ -115,6 +115,11 @@ const BlockSelector = observer(class BlockSelector extends React.Component {
     _onChangeControlTitle = e => {
 
     }
+
+    _handleInnerDivDragStart = (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+    };    
     
     _getBlock = _ => store.findBlockInCurrentPage(this.props.blockId) || {}
     _getBlockControlModel = _ => cellControls.get(this._getBlock()?.type) || {}

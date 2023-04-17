@@ -21,7 +21,7 @@
   height: 48px;
 }
 
-.block {
+.draggableBlock {
   background: #d6d8e6;
   border-radius: 5px;
   padding: 10px;

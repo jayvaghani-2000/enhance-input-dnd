@@ -2,10 +2,10 @@ import classNames from "classnames";
 import React, { useRef } from "react";
 
 const Droppable = (props) => {
+  const { children, ...rest } = props;
   const {
     activeDragOverRow,
     setActiveDragOverRow,
-    children,
     rowId,
     draggedItemDimension,
     previousDraggedOverRow,
@@ -19,7 +19,8 @@ const Droppable = (props) => {
     setDraggedOverRow,
     draggedItem,
     setDraggedItem,
-  } = props;
+  } = rest;
+
   const droppableRef = useRef();
 
   const handleDragOverParent = (e, parentId) => {
@@ -104,7 +105,7 @@ const Droppable = (props) => {
         children({ draggedItem, placeholderIndex, activeDragOverRow }),
         (child) => {
           return React.cloneElement(child, {
-            ...props,
+            ...rest,
             setDraggedItem: setDraggedItem,
             draggedItem: draggedItem,
           });

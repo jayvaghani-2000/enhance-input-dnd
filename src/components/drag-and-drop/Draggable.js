@@ -1,7 +1,7 @@
 import classNames from "classnames";
 import React, { useRef } from "react";
 
-const DraggableItem = (props) => {
+const Draggable = (props) => {
   const {
     item,
     index,
@@ -22,7 +22,9 @@ const DraggableItem = (props) => {
     );
     draggedItemDimension.current = event.target.getBoundingClientRect();
     setDraggedItem(item);
-    event.target.style.boxShadow = "inset 0 0 10px 10px rgba(39, 43, 84, 0.5)";
+    event.target.style.boxShadow =
+      "inset 0 0 40px 1px rgba(166, 170, 204, 0.6)";
+    event.target.style.background = "rgba(189, 181, 213,0.1)";
   };
 
   const draggedElementRef = useRef();
@@ -52,7 +54,7 @@ const DraggableItem = (props) => {
     ></div>
   ) : (
     <div
-      className={classNames("block", {
+      className={classNames("draggableBlock", {
         ["makeBlockVisible"]: Object.keys(draggedItem).length === 0,
       })}
       id={item.id}
@@ -67,4 +69,4 @@ const DraggableItem = (props) => {
   );
 };
 
-export default DraggableItem;
+export default Draggable;

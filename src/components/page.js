@@ -1,12 +1,26 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import store from '../store/rootStore'
 import rowColArray from './rowColArrayUtils'
 import { observer } from "mobx-react"
 import { Block } from './block'
 import './page.css'
+import DragAndDropWrapper from './drag-and-drop/DragAndDropWrapper'
+import Droppable from './drag-and-drop/Droppable'
+import Draggable from './drag-and-drop/Draggable'
+import { groupCardRowWise, reArrangeAfterDrop } from './drag-and-drop/constant'
 
 const Page = observer(props => {
+  const { clientXRef } = props;
+  const [blocks, setBlock] = useState([])
+
     const getSortedBlockArray = _ => rowColArray.getRowOrderedColOrderedArray(store.blocksForCurrentPage)
+
+    useEffect(() => {
+      if(store.blocksForCurrentPage.length) {
+        setBlock(store.blocksForCurrentPage)
+      }
+    }, [store.blocksForCurrentPage])
+
     const onReturnKeyPressed = async block => {
         if (block) {
             // it's coming from a non dummy block we need to give the focus to the next block
@@ -85,6 +99,104 @@ const Page = observer(props => {
         // TODO need to handle multiple trottle
         await store.updatePage({ title })
     }
+
+    const handleDropBlock = (e, draggedInfo) => {
+      e.preventDefault();
+      e.target.style = null;
+      const { draggedItem, draggedOverRow, placeholderIndex } = draggedInfo;
+      if (Object.keys(draggedItem).length === 0) {
+        return;
+      }
+      const targetIndex = placeholderIndex === -1 ? 0 : placeholderIndex;
+      const updatedParents = [...blocks].flat();
+      const selectedBlock = updatedParents.findIndex(
+        (i) => i.id === draggedItem.item.id
+      );
+      const dropOnRow = +(draggedOverRow - 1) / 2;
+      const isDropOnSameRow = draggedItem.item.row === dropOnRow;
+      const draggedRowBlock = updatedParents.filter(
+        (i) => Number.isInteger(dropOnRow) && i.row === dropOnRow
+      );
+  
+      updatedParents[selectedBlock].row = Math.round(dropOnRow);
+      updatedParents[selectedBlock].col =
+        targetIndex > draggedRowBlock.length
+          ? draggedRowBlock.length
+          : +targetIndex;
+  
+      const reArrangedBlock = reArrangeAfterDrop(
+        updatedParents,
+        selectedBlock,
+        dropOnRow,
+        draggedItem,
+        draggedItem.index < placeholderIndex && isDropOnSameRow
+      );
+      setBlock(reArrangedBlock);
+    };
+
+    const addPlaceholderHelper = (blocks, draggedInfo) => {
+      const { draggedItem, placeholderIndex, activeDragOverRow } = draggedInfo;
+      const updatedChildren = [...blocks];
+      const placeholder = { id: "placeholder", text: "" };
+  
+      if (placeholderIndex < 0) {
+        updatedChildren.unshift(placeholder);
+      } else {
+        updatedChildren.splice(
+          draggedItem.index < placeholderIndex &&
+            draggedItem.parentId === activeDragOverRow
+            ? placeholderIndex + 1
+            : placeholderIndex,
+          0,
+          placeholder
+        );
+      }
+      return updatedChildren;
+    };
+
+    const getColumnBlock = (rowDragOverActive, block, draggedInfo) =>
+    rowDragOverActive ? addPlaceholderHelper(block, draggedInfo) : block;
+
+    const draggableBlock = blocks.slice(0,-1)
+    const groupedCards = groupCardRowWise(draggableBlock);
+    const cardRowKeys = Object.keys(groupedCards);
+
+    const draggableBlocks = (draggedInfo, row) => {
+      return getColumnBlock(
+        row === draggedInfo.activeDragOverRow,
+        groupedCards[row],
+        draggedInfo
+      ).map((block, index) => (
+        <Draggable
+          key={block.id}
+          item={block}
+          index={index}
+          parent={row}
+          clientXRef={clientXRef}
+        >
+          <Block 
+            onHandleMenuAction={onHandleMenuAction}
+            blockId={block.id}
+            store={store}
+            onReturnKeyPressed={async _ => await onReturnKeyPressed(block)} />
+        </Draggable>
+      ));
+    };
+    
+    return <div className='page'>
+      <DragAndDropWrapper>
+        {cardRowKeys.map((row) => (
+          <Droppable
+            key={row}
+            rowId={row}
+            rowBlock={groupedCards[row]}
+            handleDrop={handleDropBlock}
+          >
+            {(draggedInfo) => draggableBlocks(draggedInfo, row)}
+        </Droppable>
+        ))}
+      </DragAndDropWrapper>
+    </div>
 
     return <div className='page'>
         {getSortedBlockArray().map((cols, rowIndex) =>

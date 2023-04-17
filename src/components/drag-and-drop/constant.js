@@ -73,15 +73,14 @@ export const reArrangeAfterDrop = (
     dragElement,
     isSameRowAndMoveRight
   );
-
-  const rearranged = sortedByColumn.map((group) => {
-    group.forEach((block, index) => {
-      if (block.row === targetRow) {
-      } else {
-      }
-      block.col = index;
+  const rearranged = sortedByColumn
+    .filter((i) => i.length)
+    .map((group, rowIndex) => {
+      group.forEach((block, index) => {
+        block.row = rowIndex;
+        block.col = index;
+      });
+      return group;
     });
-    return group;
-  });
   return rearranged.flat();
 };
