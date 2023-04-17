@@ -25,6 +25,7 @@ const Droppable = (props) => {
 
   const handleDragOverParent = (e, parentId) => {
     e.preventDefault();
+    droppableRef.current.style.height = draggedItemDimension.current.height;
     const draggedInitialClientX = e.clientX - dragXDifference;
     const children = [];
     let passPlaceholder = false;
@@ -88,11 +89,23 @@ const Droppable = (props) => {
   return (
     <div
       onDragOver={(e) => handleDragOverParent(e, rowId)}
-      onDrop={async(e) => {
-        await handleDrop(e, { draggedItem, draggedOverRow, placeholderIndex, setDraggedOverRow, setDraggedItem }, rowId);
-        
+      onDrop={async (e) => {
+        await handleDrop(
+          e,
+          {
+            draggedItem,
+            draggedOverRow,
+            placeholderIndex,
+            setDraggedOverRow,
+            setDraggedItem,
+          },
+          rowId
+        );
       }}
       onDropCapture={handleDropEndCapture}
+      onDragLeaveCapture={() => {
+        droppableRef.current.style = null;
+      }}
       ref={droppableRef}
       className={classNames("droppable", {
         [getDragOverClass(rowBlock)]: draggedOverRow === rowId,
